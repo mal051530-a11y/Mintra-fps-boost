@@ -1,0 +1,220 @@
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+--// GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "MintraFPSBoost"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+--// ปุ่มเปิด UI
+local openButton = Instance.new("TextButton")
+openButton.Size = UDim2.fromOffset(55, 55)
+openButton.Position = UDim2.new(0, 20, 0.5, -27)
+openButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+openButton.Text = "FPS"
+openButton.TextColor3 = Color3.new(1, 1, 1)
+openButton.TextSize = 16
+openButton.Font = Enum.Font.GothamBold
+openButton.Visible = false
+openButton.Parent = gui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(1, 0)
+openCorner.Parent = openButton
+
+--// หน้าต่างหลัก
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(260, 205)
+frame.Position = UDim2.new(0.5, -130, 0.5, -102)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = frame
+
+--// ชื่อ UI
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -50, 0, 40)
+title.Position = UDim2.fromOffset(10, 5)
+title.BackgroundTransparency = 1
+title.Text = "MINTRA FPS BOOST"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextSize = 19
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = frame
+
+--// ปุ่ม X
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.fromOffset(35, 35)
+closeButton.Position = UDim2.new(1, -40, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.TextSize = 18
+closeButton.Font = Enum.Font.GothamBold
+closeButton.Parent = frame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 8)
+closeCorner.Parent = closeButton
+
+--// ปุ่ม FPS
+local fpsButton = Instance.new("TextButton")
+fpsButton.Size = UDim2.fromOffset(220, 45)
+fpsButton.Position = UDim2.new(0.5, -110, 0, 55)
+fpsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+fpsButton.TextColor3 = Color3.new(1, 1, 1)
+fpsButton.TextSize = 16
+fpsButton.Font = Enum.Font.Gotham
+fpsButton.Text = "FPS Boost : OFF"
+fpsButton.Parent = frame
+
+local fpsCorner = Instance.new("UICorner")
+fpsCorner.CornerRadius = UDim.new(0, 10)
+fpsCorner.Parent = fpsButton
+
+--// ปุ่มลบพื้นผิว
+local textureButton = Instance.new("TextButton")
+textureButton.Size = UDim2.fromOffset(220, 45)
+textureButton.Position = UDim2.new(0.5, -110, 0, 110)
+textureButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+textureButton.TextColor3 = Color3.new(1, 1, 1)
+textureButton.TextSize = 16
+textureButton.Font = Enum.Font.Gotham
+textureButton.Text = "Textures : OFF"
+textureButton.Parent = frame
+
+local textureCorner = Instance.new("UICorner")
+textureCorner.CornerRadius = UDim.new(0, 10)
+textureCorner.Parent = textureButton
+
+--// สถานะ
+local fpsEnabled = false
+local textureEnabled = false
+
+--// เก็บค่า Texture/Decal เดิม
+local originalTransparency = {}
+
+--// FPS BOOST
+local function boostFPS(state)
+    fpsEnabled = state
+
+    Lighting.GlobalShadows = not state
+
+    for _, v in ipairs(Lighting:GetChildren()) do
+        if v:IsA("PostEffect") then
+            v.Enabled = not state
+        end
+    end
+
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.CastShadow = not state
+
+        elseif v:IsA("ParticleEmitter")
+        or v:IsA("Trail")
+        or v:IsA("Beam") then
+            v.Enabled = not state
+        end
+    end
+
+    fpsButton.Text = state and "FPS Boost : ON" or "FPS Boost : OFF"
+end
+
+--// ลบ/คืนพื้นผิว
+local function toggleTextures(state)
+    textureEnabled = state
+
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("Texture") or v:IsA("Decal") then
+
+            if state then
+                if originalTransparency[v] == nil then
+                    originalTransparency[v] = v.Transparency
+                end
+
+                v.Transparency = 1
+            else
+                if originalTransparency[v] ~= nil then
+                    v.Transparency = originalTransparency[v]
+                end
+            end
+        end
+    end
+
+    textureButton.Text =
+        state and "Textures : REMOVED"
+        or "Textures : OFF"
+end
+
+--// ปุ่ม FPS
+fpsButton.MouseButton1Click:Connect(function()
+    boostFPS(not fpsEnabled)
+end)
+
+--// ปุ่ม Texture
+textureButton.MouseButton1Click:Connect(function()
+    toggleTextures(not textureEnabled)
+end)
+
+--// ปิด UI
+closeButton.MouseButton1Click:Connect(function()
+    frame.Visible = false
+    openButton.Visible = true
+end)
+
+--// เปิด UI
+openButton.MouseButton1Click:Connect(function()
+    frame.Visible = true
+    openButton.Visible = false
+end)
+
+--// ลาก UI มือถือ + PC
+local dragging = false
+local dragStart
+local startPos
+
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+
+    frame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+
+        if input.Position.Y - frame.AbsolutePosition.Y < 45 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging then
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+            updateDrag(input)
+        end
+    end
+end)
